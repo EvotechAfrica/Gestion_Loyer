@@ -86,6 +86,74 @@ try {
         .modal-backdrop {
             background: rgba(0, 0, 0, 0.5);
         }
+        
+        /* Barres de défilement personnalisées */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Styles pour les menus avec défilement */
+        .scrollable-menu {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .scrollable-sidebar {
+            max-height: calc(100vh - 180px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+        }
+        
+        .sidebar-section {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .user-menu-scroll {
+            max-height: 250px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* Scrollbar pour Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Tableau avec défilement */
+        .table-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* Modal scroll */
+        .modal-scroll {
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 10px;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -97,7 +165,7 @@ try {
                 <button id="sidebarToggle" class="mr-4 text-white hover:text-gray-200 transition-colors duration-200">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="text-xl font-bold">GestionLoyer</h1>
+                <h1 class="text-xl font-bold">La veranda</h1>
             </div>
 
             <!-- Barre de recherche -->
@@ -114,11 +182,26 @@ try {
                     <i class="fas fa-user-circle text-xl"></i>
                     <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
-                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20">
-                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-cog mr-2 text-purple-500"></i>Paramètres</a>
-                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-history mr-2 text-purple-500"></i>Journal d'activité</a>
+                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20 user-menu-scroll">
+                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
+                        <i class="fas fa-user mr-2 text-purple-500"></i>Profil
+                    </a>
+                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
+                        <i class="fas fa-cog mr-2 text-purple-500"></i>Paramètres
+                    </a>
+                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
+                        <i class="fas fa-bell mr-2 text-purple-500"></i>Notifications
+                    </a>
+                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
+                        <i class="fas fa-history mr-2 text-purple-500"></i>Journal d'activité
+                    </a>
+                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
+                        <i class="fas fa-question-circle mr-2 text-purple-500"></i>Aide
+                    </a>
                     <div class="border-t my-1"></div>
-                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-sign-out-alt mr-2 text-purple-500"></i>Déconnexion</a>
+                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
+                        <i class="fas fa-sign-out-alt mr-2 text-purple-500"></i>Déconnexion
+                    </a>
                 </div>
             </div>
         </div>
@@ -131,7 +214,7 @@ try {
                 <!-- En-tête de la barre latérale -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Principal</h2>
-                    <ul class="mt-2">
+                    <ul class="mt-2 sidebar-section">
                         <li>
                             <a href="dashboard.php" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
                                 <i class="fas fa-tachometer-alt mr-3"></i>
@@ -144,13 +227,14 @@ try {
                 <!-- Section Interface -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Gestion</h2>
-                    <ul class="mt-2">
+                    <ul class="mt-2 sidebar-section">
                         <li class="mb-1">
                             <a href="boutiques.php" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
                                 <div class="flex items-center">
                                     <i class="fas fa-store mr-3"></i>
                                     Boutiques
                                 </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">14</span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -159,6 +243,7 @@ try {
                                     <i class="fas fa-tags mr-3"></i>
                                     Catégories
                                 </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo count($categories); ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -167,6 +252,7 @@ try {
                                     <i class="fas fa-users mr-3"></i>
                                     Locataires
                                 </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">8</span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -175,6 +261,7 @@ try {
                                     <i class="fas fa-file-invoice-dollar mr-3"></i>
                                     Paiements
                                 </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">42</span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -183,6 +270,7 @@ try {
                                     <i class="fas fa-user-cog mr-3"></i>
                                     Utilisateurs
                                 </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">3</span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -193,13 +281,31 @@ try {
                                 </div>
                             </a>
                         </li>
+                        <li class="mb-1">
+                            <a href="#" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-contract mr-3"></i>
+                                    Contrats
+                                </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">12</span>
+                            </a>
+                        </li>
+                        <li class="mb-1">
+                            <a href="#" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
+                                <div class="flex items-center">
+                                    <i class="fas fa-building mr-3"></i>
+                                    Immeubles
+                                </div>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">5</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
                 <!-- Section Addons -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Outils</h2>
-                    <ul class="mt-2">
+                    <ul class="mt-2 sidebar-section">
                         <li class="mb-1">
                             <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
                                 <i class="fas fa-chart-pie mr-3"></i>
@@ -212,6 +318,24 @@ try {
                                 Documents
                             </a>
                         </li>
+                        <li class="mb-1">
+                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
+                                <i class="fas fa-calendar-alt mr-3"></i>
+                                Calendrier
+                            </a>
+                        </li>
+                        <li class="mb-1">
+                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
+                                <i class="fas fa-envelope mr-3"></i>
+                                Messages
+                            </a>
+                        </li>
+                        <li class="mb-1">
+                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
+                                <i class="fas fa-tasks mr-3"></i>
+                                Tâches
+                            </a>
+                        </li>
                     </ul>
                 </div>
 
@@ -219,6 +343,7 @@ try {
                 <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
                     <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
                     <div class="font-semibold">Administrateur</div>
+                    <div class="text-xs text-white text-opacity-60 mt-1">Dernière connexion : Aujourd'hui</div>
                 </div>
             </div>
         </div>
@@ -330,15 +455,21 @@ try {
                             <option value="actif">Actif</option>
                             <option value="inactif">Inactif</option>
                         </select>
+                        <select id="sortFilter" class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
+                            <option value="newest">Plus récentes</option>
+                            <option value="oldest">Plus anciennes</option>
+                            <option value="name_asc">Nom (A-Z)</option>
+                            <option value="name_desc">Nom (Z-A)</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
             <!-- Tableau des catégories -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift">
-                <div class="overflow-x-auto">
+                <div class="table-scroll">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Désignation</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Boutiques associées</th>
@@ -351,7 +482,8 @@ try {
                             <?php foreach ($categories as $categorie): ?>
                             <tr class="hover:bg-purple-50 transition-colors duration-200 categorie-row" 
                                 data-designation="<?php echo htmlspecialchars(strtolower($categorie['designation'])); ?>"
-                                data-status="<?php echo $categorie['statut'] == 0 ? 'actif' : 'inactif'; ?>">
+                                data-status="<?php echo $categorie['statut'] == 0 ? 'actif' : 'inactif'; ?>"
+                                data-created="<?php echo $categorie['created_at']; ?>">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="h-10 w-10 flex-shrink-0 bg-purple-500 rounded-full flex items-center justify-center">
@@ -387,11 +519,13 @@ try {
                                     <button class="text-purple-600 hover:text-purple-800 mr-3 edit-categorie transition-colors duration-200" 
                                             data-id="<?php echo $categorie['id']; ?>"
                                             data-designation="<?php echo htmlspecialchars($categorie['designation']); ?>"
-                                            data-statut="<?php echo $categorie['statut']; ?>">
+                                            data-statut="<?php echo $categorie['statut']; ?>"
+                                            title="Modifier">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="text-red-600 hover:text-red-800 delete-categorie transition-colors duration-200" 
-                                            data-id="<?php echo $categorie['id']; ?>">
+                                            data-id="<?php echo $categorie['id']; ?>"
+                                            title="Supprimer">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -410,53 +544,62 @@ try {
             <!-- Modal pour ajouter/modifier une catégorie -->
             <div id="categorieModal" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full hidden z-50">
                 <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-2xl rounded-2xl bg-white">
-                    <div class="mt-3">
-                        <!-- En-tête du modal -->
-                        <div class="flex justify-between items-center pb-3 border-b">
-                            <h3 id="modalTitle" class="text-lg font-medium text-gray-900">Ajouter une catégorie</h3>
-                            <button id="closeModal" class="text-gray-400 hover:text-gray-500 transition-colors duration-200">
-                                <i class="fas fa-times text-xl"></i>
-                            </button>
-                        </div>
+                    <div class="modal-scroll">
+                        <div class="mt-3">
+                            <!-- En-tête du modal -->
+                            <div class="flex justify-between items-center pb-3 border-b">
+                                <h3 id="modalTitle" class="text-lg font-medium text-gray-900">Ajouter une catégorie</h3>
+                                <button id="closeModal" class="text-gray-400 hover:text-gray-500 transition-colors duration-200">
+                                    <i class="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
 
-                        <!-- Formulaire -->
-                        <form id="categorieForm" action="../models/traitement/categorie-post.php" method="POST">
-                            <input type="hidden" id="action" name="action" value="ajouter">
-                            <input type="hidden" id="categorieId" name="id" value="">
-                            
-                            <div class="space-y-4 mt-4">
-                                <div>
-                                    <label for="designation" class="block text-sm font-medium text-gray-700">Désignation *</label>
-                                    <input type="text" id="designation" name="designation" required
-                                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
-                                        placeholder="Ex: Vêtements, Alimentation, etc.">
-                                </div>
+                            <!-- Formulaire -->
+                            <form id="categorieForm" action="../models/traitement/categorie-post.php" method="POST">
+                                <input type="hidden" id="action" name="action" value="ajouter">
+                                <input type="hidden" id="categorieId" name="id" value="">
+                                
+                                <div class="space-y-4 mt-4">
+                                    <div>
+                                        <label for="designation" class="block text-sm font-medium text-gray-700">Désignation *</label>
+                                        <input type="text" id="designation" name="designation" required
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
+                                            placeholder="Ex: Vêtements, Alimentation, etc.">
+                                    </div>
 
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="statut" name="statut" value="1" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
-                                    <label for="statut" class="ml-2 block text-sm text-gray-700">Catégorie inactive</label>
-                                </div>
+                                    <div>
+                                        <label for="description" class="block text-sm font-medium text-gray-700">Description (optionnel)</label>
+                                        <textarea id="description" name="description" rows="3"
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
+                                            placeholder="Description de la catégorie..."></textarea>
+                                    </div>
 
-                                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
                                     <div class="flex items-center">
-                                        <i class="fas fa-info-circle text-purple-500 mr-2"></i>
-                                        <span class="text-sm text-purple-700">
-                                            Une catégorie inactive ne sera pas disponible pour l'affectation aux boutiques.
-                                        </span>
+                                        <input type="checkbox" id="statut" name="statut" value="1" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                        <label for="statut" class="ml-2 block text-sm text-gray-700">Catégorie inactive</label>
+                                    </div>
+
+                                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-info-circle text-purple-500 mr-2"></i>
+                                            <span class="text-sm text-purple-700">
+                                                Une catégorie inactive ne sera pas disponible pour l'affectation aux boutiques.
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Actions du modal -->
-                            <div class="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
-                                    Annuler
-                                </button>
-                                <button type="submit" id="saveBtn" class="btn-gradient text-white px-4 py-2 rounded-lg shadow hover-lift transition-all duration-300">
-                                    Enregistrer
-                                </button>
-                            </div>
-                        </form>
+                                <!-- Actions du modal -->
+                                <div class="flex justify-end space-x-3 pt-4 border-t mt-6">
+                                    <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                                        Annuler
+                                    </button>
+                                    <button type="submit" id="saveBtn" class="btn-gradient text-white px-4 py-2 rounded-lg shadow hover-lift transition-all duration-300">
+                                        Enregistrer
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -501,13 +644,13 @@ try {
             Toastify({
                 text: "<?= htmlspecialchars($_SESSION['message']['text']) ?>",
                 duration: 3000,
-                gravity: "top", // `top` ou `bottom`
-                position: "right", // `left`, `center` ou `right`
-                stopOnFocus: true, // Arrête la minuterie si l'utilisateur interagit avec la fenêtre
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
                 style: {
                     background: "linear-gradient(to right, <?= ($_SESSION['message']['type'] == 'success') ? '#22c55e, #16a34a' : '#ef4444, #dc2626' ?>)",
                 },
-                onClick: function() {} // Callback après le clic
+                onClick: function() {}
             }).showToast();
 
             // Supprimer le message de la session après l'affichage
@@ -528,6 +671,7 @@ try {
         const deleteCategorieIdInput = document.getElementById('deleteCategorieId');
         const searchInput = document.getElementById('searchInput');
         const statusFilter = document.getElementById('statusFilter');
+        const sortFilter = document.getElementById('sortFilter');
         const categorieTableBody = document.getElementById('categorieTableBody');
         const noResults = document.getElementById('noResults');
 
@@ -538,6 +682,7 @@ try {
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
             setupSearchAndFilters();
+            setupSorting();
         });
 
         // Configurer les écouteurs d'événements
@@ -598,12 +743,36 @@ try {
                     userMenu.classList.add('hidden');
                 }
             });
+
+            // Fermer les modales en cliquant en dehors
+            document.addEventListener('click', function(event) {
+                if (event.target === categorieModal) {
+                    hideModal();
+                }
+                if (event.target === deleteModal) {
+                    hideDeleteModal();
+                }
+            });
+
+            // Empêcher la propagation des clics dans les modales
+            document.querySelectorAll('#categorieModal > div, #deleteModal > div').forEach(modalContent => {
+                modalContent.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            });
         }
 
         // Configurer la recherche et les filtres
         function setupSearchAndFilters() {
             searchInput.addEventListener('input', filterCategories);
             statusFilter.addEventListener('change', filterCategories);
+        }
+
+        // Configurer le tri
+        function setupSorting() {
+            sortFilter.addEventListener('change', function() {
+                sortCategories(this.value);
+            });
         }
 
         // Filtrer les catégories
@@ -632,11 +801,47 @@ try {
             // Afficher/masquer le message "Aucun résultat"
             if (visibleCount === 0) {
                 noResults.classList.remove('hidden');
-                categorieTableBody.style.display = 'none';
             } else {
                 noResults.classList.add('hidden');
-                categorieTableBody.style.display = '';
             }
+        }
+
+        // Trier les catégories
+        function sortCategories(sortBy) {
+            const rows = Array.from(document.querySelectorAll('.categorie-row'));
+            const tbody = document.getElementById('categorieTableBody');
+            
+            rows.sort((a, b) => {
+                switch(sortBy) {
+                    case 'newest':
+                        const dateA = new Date(a.getAttribute('data-created'));
+                        const dateB = new Date(b.getAttribute('data-created'));
+                        return dateB - dateA;
+                        
+                    case 'oldest':
+                        const dateA2 = new Date(a.getAttribute('data-created'));
+                        const dateB2 = new Date(b.getAttribute('data-created'));
+                        return dateA2 - dateB2;
+                        
+                    case 'name_asc':
+                        const nameA = a.getAttribute('data-designation').toLowerCase();
+                        const nameB = b.getAttribute('data-designation').toLowerCase();
+                        return nameA.localeCompare(nameB);
+                        
+                    case 'name_desc':
+                        const nameA2 = a.getAttribute('data-designation').toLowerCase();
+                        const nameB2 = b.getAttribute('data-designation').toLowerCase();
+                        return nameB2.localeCompare(nameA2);
+                        
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Réorganiser les lignes dans le tbody
+            rows.forEach(row => {
+                tbody.appendChild(row);
+            });
         }
 
         // Afficher le modal d'ajout/modification
@@ -660,22 +865,26 @@ try {
             }
             
             categorieModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Empêcher le défilement du body
         }
 
         // Masquer le modal d'ajout/modification
         function hideModal() {
             categorieModal.classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Rétablir le défilement du body
         }
 
         // Afficher le modal de confirmation de suppression
         function showDeleteModal(categorieId) {
             deleteCategorieIdInput.value = categorieId;
             deleteModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Empêcher le défilement du body
         }
 
         // Masquer le modal de confirmation de suppression
         function hideDeleteModal() {
             deleteModal.classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Rétablir le défilement du body
         }
 
         // Éditer une catégorie
@@ -687,6 +896,29 @@ try {
             };
             showModal(categorie);
         }
+
+        // Gestion des touches pour fermer les modales avec ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (!categorieModal.classList.contains('hidden')) {
+                    hideModal();
+                }
+                if (!deleteModal.classList.contains('hidden')) {
+                    hideDeleteModal();
+                }
+            }
+        });
+
+        // Animation pour les barres de défilement au survol
+        document.querySelectorAll('.sidebar-section, .user-menu-scroll, .table-scroll').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                this.style.scrollbarColor = 'rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1)';
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                this.style.scrollbarColor = 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)';
+            });
+        });
     </script>
 </body>
 </html>

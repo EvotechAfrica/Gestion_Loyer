@@ -60,6 +60,59 @@ require_once("../models/select/select-affectation.php");
         .modal-backdrop {
             background: rgba(0, 0, 0, 0.5);
         }
+        
+        /* Styles pour les barres de défilement */
+        .scrollable-menu {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Pour WebKit (Chrome, Safari) */
+        .scrollable-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Pour Firefox */
+        .scrollable-menu {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Style spécifique pour la sidebar */
+        .sidebar-content {
+            height: calc(100vh - 6rem);
+            overflow-y: auto;
+            padding-bottom: 6rem; /* Espace pour le pied de page */
+        }
+        
+        /* Style pour le menu utilisateur */
+        .user-menu-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        /* Style pour le menu latéral sur petits écrans */
+        @media (max-height: 700px) {
+            .sidebar-content {
+                height: calc(100vh - 4rem);
+                padding-bottom: 4rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -71,7 +124,7 @@ require_once("../models/select/select-affectation.php");
                 <button id="sidebarToggle" class="mr-4 text-white hover:text-gray-200 transition-colors duration-200">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="text-xl font-bold">GestionLoyer</h1>
+                <h1 class="text-xl font-bold">La veranda</h1>
             </div>
 
             <!-- Barre de recherche -->
@@ -88,7 +141,7 @@ require_once("../models/select/select-affectation.php");
                     <i class="fas fa-user-circle text-xl"></i>
                     <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
-                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20">
+                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20 user-menu-scroll scrollable-menu">
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-cog mr-2 text-purple-500"></i>Paramètres</a>
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-history mr-2 text-purple-500"></i>Journal d'activité</a>
                     <div class="border-t my-1"></div>
@@ -100,102 +153,7 @@ require_once("../models/select/select-affectation.php");
 
     <div class="flex pt-16">
         <!-- Barre latérale -->
-        <div id="sidebar" class="sidebar text-white w-64 min-h-screen fixed shadow-xl">
-            <div class="p-4">
-                <!-- En-tête de la barre latérale -->
-                <div class="mb-8">
-                    <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Principal</h2>
-                    <ul class="mt-2">
-                        <li>
-                            <a href="dashboard.php" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <i class="fas fa-tachometer-alt mr-3"></i>
-                                Tableau de bord
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Section Interface -->
-                <div class="mb-8">
-                    <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Gestion</h2>
-                    <ul class="mt-2">
-                        <li class="mb-1">
-                            <a href="boutiques.php" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-store mr-3"></i>
-                                    Boutiques
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="membres.php" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-users mr-3"></i>
-                                    Locataires
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="affectations.php" class="flex items-center justify-between py-2 px-4 glass-effect rounded-lg hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-link mr-3"></i>
-                                    Affectations
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-file-invoice-dollar mr-3"></i>
-                                    Paiements
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="utilisateurs.php" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-user-cog mr-3"></i>
-                                    Utilisateurs
-                                </div>
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-chart-line mr-3"></i>
-                                    Rapports
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Section Addons -->
-                <div class="mb-8">
-                    <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Outils</h2>
-                    <ul class="mt-2">
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <i class="fas fa-chart-pie mr-3"></i>
-                                Statistiques
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <i class="fas fa-table mr-3"></i>
-                                Documents
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Pied de page de la barre latérale -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
-                    <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
-                    <div class="font-semibold">Administrateur</div>
-                </div>
-            </div>
-        </div>
+        <?php require_once 'aside1.php'?>
 
         <!-- Contenu principal -->
         <div id="mainContent" class="main-content ml-64 p-6 w-full">
@@ -309,6 +267,7 @@ require_once("../models/select/select-affectation.php");
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Téléphone</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Boutique</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Catégorie</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Statut</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -357,6 +316,12 @@ require_once("../models/select/select-affectation.php");
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                                         <?php echo htmlspecialchars($affectation['categorie_nom']); ?>
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        <?php echo $affectation['statut'] == 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                        <?php echo $affectation['statut'] == 0 ? 'Actif' : 'Inactif'; ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -529,16 +494,15 @@ require_once("../models/select/select-affectation.php");
             Toastify({
                 text: "<?= htmlspecialchars($_SESSION['message']['text']) ?>",
                 duration: 3000,
-                gravity: "top", // `top` ou `bottom`
-                position: "right", // `left`, `center` ou `right`
-                stopOnFocus: true, // Arrête la minuterie si l'utilisateur interagit avec la fenêtre
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
                 style: {
                     background: "linear-gradient(to right, <?= ($_SESSION['message']['type'] == 'success') ? '#22c55e, #16a34a' : '#ef4444, #dc2626' ?>)",
                 },
-                onClick: function() {} // Callback après le clic
+                onClick: function() {}
             }).showToast();
 
-            // Supprimer le message de la session après l'affichage
             <?php unset($_SESSION['message']); ?>
         <?php endif; ?>
 

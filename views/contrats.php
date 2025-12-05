@@ -9,8 +9,6 @@ require_once('../models/select/select-contrats.php');
 //     header('Location: login.php');
 //     exit;
 // }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -67,6 +65,59 @@ require_once('../models/select/select-contrats.php');
         .modal-backdrop {
             background: rgba(0, 0, 0, 0.5);
         }
+        
+        /* Styles pour les barres de défilement */
+        .scrollable-menu {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Pour WebKit (Chrome, Safari) */
+        .scrollable-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Pour Firefox */
+        .scrollable-menu {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Style spécifique pour la sidebar */
+        .sidebar-content {
+            height: calc(100vh - 6rem);
+            overflow-y: auto;
+            padding-bottom: 6rem; /* Espace pour le pied de page */
+        }
+        
+        /* Style pour le menu utilisateur */
+        .user-menu-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        /* Style pour le menu latéral sur petits écrans */
+        @media (max-height: 700px) {
+            .sidebar-content {
+                height: calc(100vh - 4rem);
+                padding-bottom: 4rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -78,7 +129,7 @@ require_once('../models/select/select-contrats.php');
                 <button id="sidebarToggle" class="mr-4 text-white hover:text-gray-200 transition-colors duration-200">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="text-xl font-bold">GestionLoyer</h1>
+                <h1 class="text-xl font-bold">La veranda</h1>
             </div>
 
             <!-- Barre de recherche -->
@@ -95,7 +146,7 @@ require_once('../models/select/select-contrats.php');
                     <i class="fas fa-user-circle text-xl"></i>
                     <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
-                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20">
+                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20 user-menu-scroll scrollable-menu">
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-cog mr-2 text-purple-500"></i>Paramètres</a>
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-history mr-2 text-purple-500"></i>Journal d'activité</a>
                     <div class="border-t my-1"></div>
@@ -108,7 +159,7 @@ require_once('../models/select/select-contrats.php');
     <div class="flex pt-16">
         <!-- Barre latérale -->
         <div id="sidebar" class="sidebar text-white w-64 min-h-screen fixed shadow-xl">
-            <div class="p-4">
+            <div class="sidebar-content p-4 scrollable-menu">
                 <!-- En-tête de la barre latérale -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Principal</h2>
@@ -203,12 +254,12 @@ require_once('../models/select/select-contrats.php');
                         </li>
                     </ul>
                 </div>
+            </div>
 
-                <!-- Pied de page de la barre latérale -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
-                    <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
-                    <div class="font-semibold">Administrateur</div>
-                </div>
+            <!-- Pied de page de la barre latérale -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
+                <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
+                <div class="font-semibold">Administrateur</div>
             </div>
         </div>
 
@@ -314,6 +365,14 @@ require_once('../models/select/select-contrats.php');
                         </div>
                     </div>
                     <div class="flex gap-3">
+                        <select id="categorieFilter" class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
+                            <option value="">Toutes les catégories</option>
+                            <?php foreach ($categories as $categorie): ?>
+                                <option value="<?php echo $categorie['id']; ?>">
+                                    <?php echo htmlspecialchars($categorie['designation']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                         <select id="statutFilter" class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
                             <option value="">Tous les statuts</option>
                             <option value="actif">Actif</option>
@@ -331,6 +390,7 @@ require_once('../models/select/select-contrats.php');
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date début</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date fin</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Catégorie</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Loyer mensuel</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date limite paiement</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Statut</th>
@@ -340,7 +400,8 @@ require_once('../models/select/select-contrats.php');
                         <tbody id="contratTableBody" class="bg-white divide-y divide-gray-200">
                             <?php foreach ($contrats as $contrat): ?>
                             <tr class="hover:bg-purple-50 transition-colors duration-200 contrat-row" 
-                                data-statut="<?php echo $contrat['statut'] == 0 ? 'actif' : 'inactif'; ?>">
+                                data-statut="<?php echo $contrat['statut'] == 0 ? 'actif' : 'inactif'; ?>"
+                                data-categorie="<?php echo $contrat['categorie']; ?>">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         <?php echo date('d/m/Y', strtotime($contrat['date_debut'])); ?>
@@ -349,6 +410,11 @@ require_once('../models/select/select-contrats.php');
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
                                         <?php echo $contrat['date_fin'] ? date('d/m/Y', strtotime($contrat['date_fin'])) : 'Indéterminée'; ?>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        <?php echo $contrat['categorie_nom'] ? htmlspecialchars($contrat['categorie_nom']) : 'Non définie'; ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -375,6 +441,7 @@ require_once('../models/select/select-contrats.php');
                                             data-id="<?php echo $contrat['id']; ?>"
                                             data-date-debut="<?php echo $contrat['date_debut']; ?>"
                                             data-date-fin="<?php echo $contrat['date_fin']; ?>"
+                                            data-categorie="<?php echo $contrat['categorie']; ?>"
                                             data-loyer="<?php echo $contrat['loyer_mensuel']; ?>"
                                             data-date-paiement="<?php echo $contrat['date_paiement']; ?>"
                                             data-conditions="<?php echo htmlspecialchars($contrat['conditions_speciales']); ?>"
@@ -440,9 +507,21 @@ require_once('../models/select/select-contrats.php');
                                     </div>
                                 </div>
 
+                                <div>
+                                    <label for="categorie" class="block text-sm font-medium text-gray-700">Catégorie de boutique</label>
+                                    <select id="categorie" name="categorie" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
+                                        <option value="">Sélectionnez une catégorie</option>
+                                        <?php foreach ($categories as $categorie): ?>
+                                            <option value="<?php echo $categorie['id']; ?>">
+                                                <?php echo htmlspecialchars($categorie['designation']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label for="loyer_mensuel" class="block text-sm font-medium text-gray-700">Loyer mensuel (€) *</label>
+                                        <label for="loyer_mensuel" class="block text-sm font-medium text-gray-700">Loyer mensuel ($) *</label>
                                         <input type="number" id="loyer_mensuel" name="loyer_mensuel" step="0.01" min="0" required
                                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
                                             placeholder="0.00">
@@ -526,7 +605,7 @@ require_once('../models/select/select-contrats.php');
                             <button id="cancelReactivate" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
                                 Annuler
                             </button>
-                            <form id="reactivateForm" action="../../models/traitement/contrat-post.php" method="POST" class="inline">
+                            <form id="reactivateForm" action="../models/traitement/contrat-post.php" method="POST" class="inline">
                                 <input type="hidden" name="action" value="reactiver">
                                 <input type="hidden" name="id" id="reactivateContratId" value="">
                                 <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 shadow hover-lift">
@@ -578,6 +657,7 @@ require_once('../models/select/select-contrats.php');
         const deleteContratIdInput = document.getElementById('deleteContratId');
         const reactivateContratIdInput = document.getElementById('reactivateContratId');
         const searchInput = document.getElementById('searchInput');
+        const categorieFilter = document.getElementById('categorieFilter');
         const statutFilter = document.getElementById('statutFilter');
         const contratTableBody = document.getElementById('contratTableBody');
         const noResults = document.getElementById('noResults');
@@ -614,12 +694,13 @@ require_once('../models/select/select-contrats.php');
                     const contratId = this.getAttribute('data-id');
                     const dateDebut = this.getAttribute('data-date-debut');
                     const dateFin = this.getAttribute('data-date-fin');
+                    const categorie = this.getAttribute('data-categorie');
                     const loyer = this.getAttribute('data-loyer');
                     const datePaiement = this.getAttribute('data-date-paiement');
                     const conditions = this.getAttribute('data-conditions');
                     const statut = this.getAttribute('data-statut');
                     
-                    editContrat(contratId, dateDebut, dateFin, loyer, datePaiement, conditions, statut);
+                    editContrat(contratId, dateDebut, dateFin, categorie, loyer, datePaiement, conditions, statut);
                 });
             });
             
@@ -751,12 +832,14 @@ require_once('../models/select/select-contrats.php');
         // Configurer la recherche et les filtres
         function setupSearchAndFilters() {
             searchInput.addEventListener('input', filterContrats);
+            categorieFilter.addEventListener('change', filterContrats);
             statutFilter.addEventListener('change', filterContrats);
         }
 
         // Filtrer les contrats
         function filterContrats() {
             const searchTerm = searchInput.value.toLowerCase();
+            const categorieFilterValue = categorieFilter.value;
             const statutFilterValue = statutFilter.value;
             
             const rows = document.querySelectorAll('.contrat-row');
@@ -764,13 +847,15 @@ require_once('../models/select/select-contrats.php');
             
             rows.forEach(row => {
                 const statut = row.getAttribute('data-statut');
+                const categorie = row.getAttribute('data-categorie');
                 
                 // Pour la recherche, on peut chercher dans le texte des cellules
                 const rowText = row.textContent.toLowerCase();
                 const matchesSearch = rowText.includes(searchTerm);
+                const matchesCategorie = !categorieFilterValue || categorie === categorieFilterValue;
                 const matchesStatut = !statutFilterValue || statut === statutFilterValue;
                 
-                if (matchesSearch && matchesStatut) {
+                if (matchesSearch && matchesCategorie && matchesStatut) {
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -926,11 +1011,12 @@ require_once('../models/select/select-contrats.php');
         }
 
         // Éditer un contrat
-        function editContrat(contratId, dateDebut, dateFin, loyer, datePaiement, conditions, statut) {
+        function editContrat(contratId, dateDebut, dateFin, categorie, loyer, datePaiement, conditions, statut) {
             const contrat = {
                 id: contratId,
                 dateDebut: dateDebut,
                 dateFin: dateFin,
+                categorie: categorie,
                 loyer: loyer,
                 datePaiement: datePaiement,
                 conditions: conditions,
@@ -946,6 +1032,7 @@ require_once('../models/select/select-contrats.php');
             contratIdInput.value = contrat.id;
             document.getElementById('date_debut').value = contrat.dateDebut;
             document.getElementById('date_fin').value = contrat.dateFin;
+            document.getElementById('categorie').value = contrat.categorie;
             document.getElementById('loyer_mensuel').value = contrat.loyer;
             document.getElementById('date_paiement').value = contrat.datePaiement;
             document.getElementById('conditions_speciales').value = contrat.conditions;

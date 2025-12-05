@@ -2,51 +2,16 @@
 # Se connecter à la BD
 include '../connexion/connexion.php';
 
-# Récupérer les contrats actifs (non expirés)
-$sql_contrats = "SELECT c.*, cat.designation as categorie_nom 
-                 FROM contrats c 
-                 LEFT JOIN categorie cat ON c.categorie = cat.id 
-                 WHERE c.statut = 0 
-                 AND (c.date_fin IS NULL OR c.date_fin >= CURDATE())
-                 ORDER BY c.created_at DESC";
-$stmt_contrats = $pdo->query($sql_contrats);
-$contrats = $stmt_contrats->fetchAll(PDO::FETCH_ASSOC);
+# Récupérer les charges
+$sql_charges = "SELECT * FROM charges WHERE statut = 0 ORDER BY created_at DESC";
+$stmt_charges = $pdo->query($sql_charges);
+$charges = $stmt_charges->fetchAll(PDO::FETCH_ASSOC);
 
-# Récupérer les membres/locataires
-$sql_membres = "SELECT id, nom, prenom FROM membres WHERE statut = 0 ORDER BY nom, prenom";
-$stmt_membres = $pdo->query($sql_membres);
-$membres = $stmt_membres->fetchAll(PDO::FETCH_ASSOC);
-
-# Récupérer les affectations actives
-$sql_affectations = "SELECT a.*, 
-                     m.nom as nom_membre, m.postnom as postnom_membre, m.prenom as prenom_membre,
-                     b.numero as boutique_numero
-                     FROM affectation a 
-                     LEFT JOIN membres m ON a.membre = m.id 
-                     LEFT JOIN boutiques b ON a.boutique = b.id 
-                     WHERE a.statut = 0 
-                     ORDER BY a.created_at DESC";
-$stmt_affectations = $pdo->query($sql_affectations);
-$affectations = $stmt_affectations->fetchAll(PDO::FETCH_ASSOC);
-
-# Récupérer les paiements avec les informations des contrats et membres
-$sql_paiements = "SELECT p.*, c.date_debut, c.date_fin, c.loyer_mensuel, m.nom, m.prenom 
-                  FROM paiements p 
-                  LEFT JOIN contrats c ON p.contrat_id = c.id 
-                  LEFT JOIN affectation a ON p.affectation = a.id 
-                  LEFT JOIN membres m ON a.membre = m.id 
-                  WHERE p.statut = 0 
-                  ORDER BY p.created_at DESC";
-$stmt_paiements = $pdo->query($sql_paiements);
-$paiements = $stmt_paiements->fetchAll(PDO::FETCH_ASSOC);
-
-# Calculer les statistiques
-$totalPerçu = array_sum(array_column($paiements, 'montant'));
-$totalAttendu = array_sum(array_column($paiements, 'loyer_mensuel'));
-$soldeRestant = $totalAttendu - $totalPerçu;
-
-# Dates par défaut
-$date_automatique = date('Y-m-d');
+# Vérification d'authentification
+// if (!isset($_SESSION['user_id'])) {
+//     header('Location: login.php');
+//     exit;
+// }
 ?>
 
 <!DOCTYPE html>
@@ -54,9 +19,10 @@ $date_automatique = date('Y-m-d');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Paiements - GestionLoyer</title>
+    <title>Gestion des Charges - GestionLoyer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ajouter Toastify CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <style>
         .sidebar {
@@ -81,6 +47,9 @@ $date_automatique = date('Y-m-d');
         .btn-gradient:hover {
             background: linear-gradient(90deg, #5a6fd8 0%, #6a4190 100%);
         }
+        .card-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -99,18 +68,6 @@ $date_automatique = date('Y-m-d');
         }
         .modal-backdrop {
             background: rgba(0, 0, 0, 0.5);
-        }
-        .badge-paye {
-            background-color: #10B981;
-            color: white;
-        }
-        .badge-retard {
-            background-color: #EF4444;
-            color: white;
-        }
-        .badge-attente {
-            background-color: #F59E0B;
-            color: white;
         }
         
         /* Styles pour les barres de défilement */
@@ -257,10 +214,18 @@ $date_automatique = date('Y-m-d');
                             </a>
                         </li>
                         <li class="mb-1">
-                            <a href="paiements.php" class="flex items-center justify-between py-2 px-4 glass-effect rounded-lg hover-lift">
+                            <a href="paiements.php" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
                                 <div class="flex items-center">
                                     <i class="fas fa-file-invoice-dollar mr-3"></i>
                                     Paiements
+                                </div>
+                            </a>
+                        </li>
+                        <li class="mb-1">
+                            <a href="charges.php" class="flex items-center justify-between py-2 px-4 glass-effect rounded-lg hover-lift">
+                                <div class="flex items-center">
+                                    <i class="fas fa-money-bill-wave mr-3"></i>
+                                    Charges
                                 </div>
                             </a>
                         </li>
@@ -315,40 +280,26 @@ $date_automatique = date('Y-m-d');
             <!-- En-tête et fil d'Ariane -->
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Gestion des Paiements</h1>
+                    <h1 class="text-2xl font-bold text-gray-800">Gestion des Charges</h1>
                     <div class="flex items-center text-sm text-gray-600 mt-1">
                         <span class="text-purple-600">Tableau de bord</span>
                         <i class="fas fa-chevron-right mx-2 text-xs text-purple-400"></i>
-                        <span class="font-medium text-gray-700">Paiements</span>
+                        <span class="font-medium text-gray-700">Charges</span>
                     </div>
                 </div>
                 <button id="btnAjouter" class="btn-gradient text-white px-4 py-2 rounded-lg flex items-center shadow-lg hover-lift transition-all duration-300">
-                    <i class="fas fa-plus mr-2"></i> Nouveau paiement
+                    <i class="fas fa-plus mr-2"></i> Nouvelle charge
                 </button>
             </div>
 
             <!-- Cartes de statistiques -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div class="stat-card text-white rounded-xl p-5 hover-lift">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm font-medium text-white text-opacity-90">Total paiements</p>
+                            <p class="text-sm font-medium text-white text-opacity-90">Total charges</p>
                             <p class="text-2xl font-bold mt-1">
-                                <?php echo count($paiements); ?>
-                            </p>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-3 rounded-xl">
-                            <i class="fas fa-file-invoice-dollar text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-5 shadow-lg hover-lift">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-white text-opacity-90">Montant total perçu</p>
-                            <p class="text-2xl font-bold mt-1">
-                                <?php echo number_format($totalPerçu, 2, ',', ' '); ?> $
+                                <?php echo count($charges); ?>
                             </p>
                         </div>
                         <div class="bg-white bg-opacity-20 p-3 rounded-xl">
@@ -357,182 +308,111 @@ $date_automatique = date('Y-m-d');
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-5 shadow-lg hover-lift">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-5 shadow-lg hover-lift">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm font-medium text-white text-opacity-90">Montant total attendu</p>
+                            <p class="text-sm font-medium text-white text-opacity-90">Charges actives</p>
                             <p class="text-2xl font-bold mt-1">
-                                <?php echo number_format($totalAttendu, 2, ',', ' '); ?> $
+                                <?php 
+                                    $actives = array_filter($charges, function($charge) {
+                                        return $charge['statut'] == 0;
+                                    });
+                                    echo count($actives);
+                                ?>
                             </p>
                         </div>
                         <div class="bg-white bg-opacity-20 p-3 rounded-xl">
-                            <i class="fas fa-chart-line text-lg"></i>
+                            <i class="fas fa-check-circle text-lg"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-5 shadow-lg hover-lift">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-5 shadow-lg hover-lift">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm font-medium text-white text-opacity-90">Solde restant</p>
-                            <p class="text-2xl font-bold mt-1">
-                                <?php echo number_format($soldeRestant, 2, ',', ' '); ?> $
-                            </p>
-                            <p class="text-xs mt-1 <?php echo $soldeRestant > 0 ? 'text-red-200' : 'text-green-200'; ?>">
-                                <?php echo $soldeRestant > 0 ? 'En attente' : 'Excédent'; ?>
+                            <p class="text-sm font-medium text-white text-opacity-90">Dernière ajout</p>
+                            <p class="text-lg font-bold mt-1">
+                                <?php 
+                                    if (!empty($charges)) {
+                                        $derniere = $charges[0];
+                                        echo date('d/m/Y', strtotime($derniere['created_at']));
+                                    } else {
+                                        echo 'Aucune';
+                                    }
+                                ?>
                             </p>
                         </div>
                         <div class="bg-white bg-opacity-20 p-3 rounded-xl">
-                            <i class="fas fa-balance-scale text-lg"></i>
+                            <i class="fas fa-history text-lg"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Barre de recherche et filtres -->
+            <!-- Barre de recherche -->
             <div class="bg-white rounded-xl shadow-lg p-6 mb-6 hover-lift">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div class="flex-1">
                         <div class="relative">
-                            <input type="text" id="searchInput" placeholder="Rechercher un paiement..." 
+                            <input type="text" id="searchInput" placeholder="Rechercher une charge..." 
                                    class="w-full px-4 py-3 pl-12 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
                             <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                         </div>
                     </div>
-                    <div class="flex gap-3">
-                        <select id="etatFilter" class="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
-                            <option value="">Tous les états</option>
-                            <option value="validé">Validé</option>
-                            <option value="en_attente">En attente</option>
-                            <option value="rejeté">Rejeté</option>
-                        </select>
-                    </div>
                 </div>
             </div>
 
-            <!-- Tableau des paiements -->
+            <!-- Tableau des charges -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date paiement</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Locataire</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Contrat</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Montant payé</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Montant restant</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">État</th>
-                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Notes</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">#ID</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Désignation</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date création</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Statut</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="paiementTableBody" class="bg-white divide-y divide-gray-200">
-                            <?php foreach ($paiements as $paiement): 
-                                $montantRestant = $paiement['loyer_mensuel'] - $paiement['montant'];
-                                $pourcentagePaye = ($paiement['montant'] / $paiement['loyer_mensuel']) * 100;
-                            ?>
-                            <tr class="hover:bg-purple-50 transition-colors duration-200 paiement-row" 
-                                data-etat="<?php echo $paiement['etat']; ?>">
+                        <tbody id="chargeTableBody" class="bg-white divide-y divide-gray-200">
+                            <?php foreach ($charges as $charge): ?>
+                            <tr class="hover:bg-purple-50 transition-colors duration-200 charge-row">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
-                                        <?php echo date('d/m/Y', strtotime($paiement['date_paiement'])); ?>
+                                        #<?php echo $charge['id']; ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
-                                        <?php echo $paiement['nom'] ? htmlspecialchars($paiement['prenom'] . ' ' . $paiement['nom']) : 'Non assigné'; ?>
+                                        <?php echo htmlspecialchars($charge['designation']); ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        Contrat du <?php echo date('d/m/Y', strtotime($paiement['date_debut'])); ?>
+                                    <div class="text-sm text-gray-900">
+                                        <?php echo date('d/m/Y H:i', strtotime($charge['created_at'])); ?>
                                     </div>
-                                    <div class="text-xs text-gray-500">
-                                        Loyer: <?php echo number_format($paiement['loyer_mensuel'], 2, ',', ' '); ?> $
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        <?php echo number_format($paiement['montant'], 2, ',', ' '); ?> $
-                                    </div>
-                                    <!-- Barre de progression -->
-                                    <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                        <div class="bg-green-600 h-2 rounded-full" 
-                                             style="width: <?php echo min($pourcentagePaye, 100); ?>%">
-                                        </div>
-                                    </div>
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        <?php echo number_format($pourcentagePaye, 1); ?>% payé
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php if ($montantRestant > 0): ?>
-                                        <div class="text-sm font-medium text-red-600">
-                                            <?php echo number_format($montantRestant, 2, ',', ' '); ?> $
-                                        </div>
-                                        <div class="text-xs text-red-500">
-                                            Reste à payer
-                                        </div>
-                                    <?php elseif ($montantRestant < 0): ?>
-                                        <div class="text-sm font-medium text-green-600">
-                                            <?php echo number_format(abs($montantRestant), 2, ',', ' '); ?> $
-                                        </div>
-                                        <div class="text-xs text-green-500">
-                                            Excédent
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="text-sm font-medium text-green-600">
-                                            0,00 $
-                                        </div>
-                                        <div class="text-xs text-green-500">
-                                            Payé intégralement
-                                        </div>
-                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <?php 
-                                            switch($paiement['etat']) {
-                                                case 'validé': echo 'badge-paye'; break;
-                                                case 'en_attente': echo 'badge-attente'; break;
-                                                case 'rejeté': echo 'badge-retard'; break;
-                                                default: echo 'bg-gray-100 text-gray-800';
-                                            }
-                                        ?>">
-                                        <?php 
-                                            switch($paiement['etat']) {
-                                                case 'validé': echo 'Validé'; break;
-                                                case 'en_attente': echo 'En attente'; break;
-                                                case 'rejeté': echo 'Rejeté'; break;
-                                                default: echo $paiement['etat'];
-                                            }
-                                        ?>
+                                        <?php echo $charge['statut'] == 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                        <?php echo $charge['statut'] == 0 ? 'Actif' : 'Inactif'; ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm text-gray-900 max-w-xs truncate">
-                                        <?php echo $paiement['notes'] ? htmlspecialchars($paiement['notes']) : 'Aucune note'; ?>
-                                    </div>
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button class="text-purple-600 hover:text-purple-800 mr-3 edit-paiement transition-colors duration-200" 
-                                            data-id="<?php echo $paiement['id']; ?>"
-                                            data-date-paiement="<?php echo $paiement['date_paiement']; ?>"
-                                            data-contrat-id="<?php echo $paiement['contrat_id']; ?>"
-                                            data-affectation="<?php echo $paiement['affectation']; ?>"
-                                            data-montant="<?php echo $paiement['montant']; ?>"
-                                            data-etat="<?php echo $paiement['etat']; ?>"
-                                            data-notes="<?php echo htmlspecialchars($paiement['notes']); ?>">
+                                    <button class="text-purple-600 hover:text-purple-800 mr-3 edit-charge transition-colors duration-200" 
+                                            data-id="<?php echo $charge['id']; ?>"
+                                            data-designation="<?php echo htmlspecialchars($charge['designation']); ?>">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <?php if ($paiement['statut'] == 0): ?>
-                                    <button class="text-red-600 hover:text-red-800 delete-paiement transition-colors duration-200" 
-                                            data-id="<?php echo $paiement['id']; ?>">
+                                    <?php if ($charge['statut'] == 0): ?>
+                                    <button class="text-red-600 hover:text-red-800 delete-charge transition-colors duration-200" 
+                                            data-id="<?php echo $charge['id']; ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                     <?php else: ?>
-                                    <button class="text-green-600 hover:text-green-800 reactiver-paiement transition-colors duration-200" 
-                                            data-id="<?php echo $paiement['id']; ?>">
+                                    <button class="text-green-600 hover:text-green-800 reactiver-charge transition-colors duration-200" 
+                                            data-id="<?php echo $charge['id']; ?>">
                                         <i class="fas fa-undo"></i>
                                     </button>
                                     <?php endif; ?>
@@ -544,119 +424,35 @@ $date_automatique = date('Y-m-d');
                 </div>
                 <div id="noResults" class="hidden p-8 text-center">
                     <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
-                    <h3 class="text-lg font-medium text-gray-700">Aucun paiement trouvé</h3>
+                    <h3 class="text-lg font-medium text-gray-700">Aucune charge trouvée</h3>
                     <p class="text-gray-500 mt-2">Essayez de modifier vos critères de recherche</p>
                 </div>
             </div>
 
-            <!-- Modal pour ajouter/modifier un paiement -->
-            <div id="paiementModal" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full hidden z-50">
-                <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-2xl rounded-2xl bg-white">
+            <!-- Modal pour ajouter/modifier une charge -->
+            <div id="chargeModal" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full hidden z-50">
+                <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-2xl rounded-2xl bg-white">
                     <div class="mt-3">
                         <!-- En-tête du modal -->
                         <div class="flex justify-between items-center pb-3 border-b">
-                            <h3 id="modalTitle" class="text-lg font-medium text-gray-900">Nouveau paiement</h3>
+                            <h3 id="modalTitle" class="text-lg font-medium text-gray-900">Nouvelle charge</h3>
                             <button id="closeModal" class="text-gray-400 hover:text-gray-500 transition-colors duration-200">
                                 <i class="fas fa-times text-xl"></i>
                             </button>
                         </div>
 
                         <!-- Formulaire -->
-                        <form id="paiementForm" action="../models/traitement/paiement-post.php" method="POST">
+                        <form id="chargeForm" action="../models/traitement/charge-post.php" method="POST">
                             <input type="hidden" id="action" name="action" value="ajouter">
-                            <input type="hidden" id="paiementId" name="id" value="">
-                            <input type="hidden" id="date_paiement" name="date_paiement" value="<?php echo $date_automatique; ?>">
+                            <input type="hidden" id="chargeId" name="id" value="">
                             
                             <div class="grid grid-cols-1 gap-6 mt-4">
-                                <!-- Informations sur la date de paiement (automatique) -->
-                                <div class="bg-blue-50 p-4 rounded-lg">
-                                    <div class="flex items-center">
-                                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
-                                        <span class="text-sm font-medium text-blue-800">
-                                            Date de paiement automatique : <?php echo date('d/m/Y'); ?>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="contrat_id" class="block text-sm font-medium text-gray-700">Contrat *</label>
-                                        <select id="contrat_id" name="contrat_id" required
-                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
-                                            <option value="">Sélectionner un contrat</option>
-                                            <?php foreach ($contrats as $contrat): ?>
-                                                <option value="<?php echo $contrat['id']; ?>" 
-                                                        data-loyer="<?php echo $contrat['loyer_mensuel']; ?>"
-                                                        data-date-debut="<?php echo $contrat['date_debut']; ?>"
-                                                        data-date-fin="<?php echo $contrat['date_fin']; ?>">
-                                                    Contrat #<?php echo $contrat['id']; ?> - <?php echo number_format($contrat['loyer_mensuel'], 2, ',', ' '); ?> $
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <p id="contrat_id_message" class="text-red-500 text-xs mt-1 hidden"></p>
-                                    </div>
-
-                                    <div>
-                                        <label for="affectation" class="block text-sm font-medium text-gray-700">Affectation *</label>
-                                        <select id="affectation" name="affectation" required
-                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
-                                            <option value="">Sélectionner une affectation</option>
-                                            <?php foreach ($affectations as $affectation): ?>
-                                                <option value="<?php echo $affectation['id']; ?>">
-                                                    Affectation #<?php echo $affectation['id']; ?> - 
-                                                    <?php echo htmlspecialchars($affectation['nom_membre'] . ' ' . $affectation['postnom_membre'] . ' ' . $affectation['prenom_membre']); ?> -
-                                                    Boutique #<?php echo $affectation['boutique_numero']; ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <p id="affectation_message" class="text-red-500 text-xs mt-1 hidden"></p>
-                                    </div>
-                                </div>
-
-                                <!-- Dates du contrat -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Date de début</label>
-                                        <div class="mt-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                                            <span id="contrat_date_debut">-</span>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Date de fin</label>
-                                        <div class="mt-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                                            <span id="contrat_date_fin">-</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="montant" class="block text-sm font-medium text-gray-700">Montant ($) *</label>
-                                        <input type="number" id="montant" name="montant" step="0.01" min="0" required
-                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
-                                            placeholder="0.00">
-                                        <div id="loyer_reference" class="text-xs text-gray-500 mt-1 hidden">
-                                            Loyer mensuel: <span id="loyer_mensuel_value"></span> $
-                                        </div>
-                                        <p id="montant_message" class="text-red-500 text-xs mt-1 hidden"></p>
-                                    </div>
-
-                                    <div>
-                                        <label for="etat" class="block text-sm font-medium text-gray-700">État *</label>
-                                        <select id="etat" name="etat" required
-                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
-                                            <option value="en_attente">En attente</option>
-                                            <option value="validé">Validé</option>
-                                            <option value="rejeté">Rejeté</option>
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div>
-                                    <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
-                                    <textarea id="notes" name="notes" rows="3"
+                                    <label for="designation" class="block text-sm font-medium text-gray-700">Désignation *</label>
+                                    <input type="text" id="designation" name="designation" required
                                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
-                                        placeholder="Notes supplémentaires sur le paiement..."></textarea>
+                                        placeholder="Ex: Eau, Électricité, Entretien...">
+                                    <p id="designation_message" class="text-red-500 text-xs mt-1 hidden"></p>
                                 </div>
                             </div>
 
@@ -684,16 +480,16 @@ $date_automatique = date('Y-m-d');
                         <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Confirmer la suppression</h3>
                         <div class="mt-2 px-7 py-3">
                             <p class="text-sm text-gray-500">
-                                Êtes-vous sûr de vouloir désactiver ce paiement ?
+                                Êtes-vous sûr de vouloir désactiver cette charge ?
                             </p>
                         </div>
                         <div class="flex justify-center space-x-3 mt-4">
                             <button id="cancelDelete" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
                                 Annuler
                             </button>
-                            <form id="deleteForm" action="../models/traitement/paiement-post.php" method="POST" class="inline">
+                            <form id="deleteForm" action="../models/traitement/charge-post.php" method="POST" class="inline">
                                 <input type="hidden" name="action" value="supprimer">
-                                <input type="hidden" name="id" id="deletePaiementId" value="">
+                                <input type="hidden" name="id" id="deleteChargeId" value="">
                                 <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 shadow hover-lift">
                                     Désactiver
                                 </button>
@@ -713,16 +509,16 @@ $date_automatique = date('Y-m-d');
                         <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Confirmer la réactivation</h3>
                         <div class="mt-2 px-7 py-3">
                             <p class="text-sm text-gray-500">
-                                Êtes-vous sûr de vouloir réactiver ce paiement ?
+                                Êtes-vous sûr de vouloir réactiver cette charge ?
                             </p>
                         </div>
                         <div class="flex justify-center space-x-3 mt-4">
                             <button id="cancelReactivate" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
                                 Annuler
                             </button>
-                            <form id="reactivateForm" action="../models/traitement/paiement-post.php" method="POST" class="inline">
+                            <form id="reactivateForm" action="../models/traitement/charge-post.php" method="POST" class="inline">
                                 <input type="hidden" name="action" value="reactiver">
-                                <input type="hidden" name="id" id="reactivatePaiementId" value="">
+                                <input type="hidden" name="id" id="reactivateChargeId" value="">
                                 <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 shadow hover-lift">
                                     Réactiver
                                 </button>
@@ -756,10 +552,10 @@ $date_automatique = date('Y-m-d');
         <?php endif; ?>
 
         // Éléments du DOM
-        const paiementModal = document.getElementById('paiementModal');
+        const chargeModal = document.getElementById('chargeModal');
         const deleteModal = document.getElementById('deleteModal');
         const reactivateModal = document.getElementById('reactivateModal');
-        const paiementForm = document.getElementById('paiementForm');
+        const chargeForm = document.getElementById('chargeForm');
         const modalTitle = document.getElementById('modalTitle');
         const btnAjouter = document.getElementById('btnAjouter');
         const closeModal = document.getElementById('closeModal');
@@ -767,33 +563,26 @@ $date_automatique = date('Y-m-d');
         const cancelDelete = document.getElementById('cancelDelete');
         const cancelReactivate = document.getElementById('cancelReactivate');
         const actionInput = document.getElementById('action');
-        const paiementIdInput = document.getElementById('paiementId');
-        const deletePaiementIdInput = document.getElementById('deletePaiementId');
-        const reactivatePaiementIdInput = document.getElementById('reactivatePaiementId');
+        const chargeIdInput = document.getElementById('chargeId');
+        const deleteChargeIdInput = document.getElementById('deleteChargeId');
+        const reactivateChargeIdInput = document.getElementById('reactivateChargeId');
         const searchInput = document.getElementById('searchInput');
-        const etatFilter = document.getElementById('etatFilter');
-        const paiementTableBody = document.getElementById('paiementTableBody');
+        const chargeTableBody = document.getElementById('chargeTableBody');
         const noResults = document.getElementById('noResults');
-        const contratSelect = document.getElementById('contrat_id');
-        const montantInput = document.getElementById('montant');
-        const loyerReference = document.getElementById('loyer_reference');
-        const loyerMensuelValue = document.getElementById('loyer_mensuel_value');
-        const contratDateDebut = document.getElementById('contrat_date_debut');
-        const contratDateFin = document.getElementById('contrat_date_fin');
+        const designationInput = document.getElementById('designation');
 
         // Variables pour la gestion des actions
-        let currentPaiementId = null;
+        let currentChargeId = null;
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
-            setupSearchAndFilters();
-            setupContratLoyer();
+            setupSearch();
         });
 
         // Configurer les écouteurs d'événements
         function setupEventListeners() {
-            // Bouton pour ajouter un paiement
+            // Bouton pour ajouter une charge
             btnAjouter.addEventListener('click', function() {
                 showModal();
             });
@@ -809,33 +598,28 @@ $date_automatique = date('Y-m-d');
             cancelReactivate.addEventListener('click', hideReactivateModal);
             
             // Boutons d'édition
-            document.querySelectorAll('.edit-paiement').forEach(button => {
+            document.querySelectorAll('.edit-charge').forEach(button => {
                 button.addEventListener('click', function() {
-                    const paiementId = this.getAttribute('data-id');
-                    const datePaiement = this.getAttribute('data-date-paiement');
-                    const contratId = this.getAttribute('data-contrat-id');
-                    const affectation = this.getAttribute('data-affectation');
-                    const montant = this.getAttribute('data-montant');
-                    const etat = this.getAttribute('data-etat');
-                    const notes = this.getAttribute('data-notes');
+                    const chargeId = this.getAttribute('data-id');
+                    const designation = this.getAttribute('data-designation');
                     
-                    editPaiement(paiementId, datePaiement, contratId, affectation, montant, etat, notes);
+                    editCharge(chargeId, designation);
                 });
             });
             
             // Boutons de suppression
-            document.querySelectorAll('.delete-paiement').forEach(button => {
+            document.querySelectorAll('.delete-charge').forEach(button => {
                 button.addEventListener('click', function() {
-                    const paiementId = this.getAttribute('data-id');
-                    showDeleteModal(paiementId);
+                    const chargeId = this.getAttribute('data-id');
+                    showDeleteModal(chargeId);
                 });
             });
 
             // Boutons de réactivation
-            document.querySelectorAll('.reactiver-paiement').forEach(button => {
+            document.querySelectorAll('.reactiver-charge').forEach(button => {
                 button.addEventListener('click', function() {
-                    const paiementId = this.getAttribute('data-id');
-                    showReactivateModal(paiementId);
+                    const chargeId = this.getAttribute('data-id');
+                    showReactivateModal(chargeId);
                 });
             });
             
@@ -866,31 +650,24 @@ $date_automatique = date('Y-m-d');
             });
 
             // Validation du formulaire
-            paiementForm.addEventListener('submit', function(e) {
+            chargeForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const contratId = document.getElementById('contrat_id').value;
-                const affectation = document.getElementById('affectation').value;
-                const montant = document.getElementById('montant').value;
-                const etat = document.getElementById('etat').value;
+                const designation = document.getElementById('designation').value;
                 
                 let errors = [];
                 
                 // Validation des champs obligatoires
-                if (!contratId) {
-                    errors.push('Le contrat est obligatoire');
+                if (!designation) {
+                    errors.push('La désignation est obligatoire');
                 }
                 
-                if (!affectation) {
-                    errors.push('L\'affectation est obligatoire');
+                if (designation.length < 2) {
+                    errors.push('La désignation doit contenir au moins 2 caractères');
                 }
                 
-                if (!montant || montant <= 0) {
-                    errors.push('Le montant doit être un nombre positif');
-                }
-                
-                if (!etat) {
-                    errors.push('L\'état est obligatoire');
+                if (designation.length > 50) {
+                    errors.push('La désignation ne peut pas dépasser 50 caractères');
                 }
                 
                 if (errors.length > 0) {
@@ -911,75 +688,28 @@ $date_automatique = date('Y-m-d');
             });
 
             // Validation en temps réel
-            montantInput.addEventListener('input', function() {
-                validerMontantEnTempsReel();
+            designationInput.addEventListener('input', function() {
+                validerDesignationEnTempsReel();
             });
         }
 
-        // Configurer la gestion du loyer par contrat
-        function setupContratLoyer() {
-            contratSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const loyerMensuel = selectedOption.getAttribute('data-loyer');
-                const dateDebut = selectedOption.getAttribute('data-date-debut');
-                const dateFin = selectedOption.getAttribute('data-date-fin');
-                
-                // Mettre à jour les dates du contrat
-                if (dateDebut) {
-                    contratDateDebut.textContent = formatDate(dateDebut);
-                } else {
-                    contratDateDebut.textContent = '-';
-                }
-                
-                if (dateFin) {
-                    contratDateFin.textContent = formatDate(dateFin);
-                } else {
-                    contratDateFin.textContent = 'Indéterminée';
-                }
-                
-                // Mettre à jour le loyer
-                if (loyerMensuel) {
-                    loyerMensuelValue.textContent = parseFloat(loyerMensuel).toFixed(2);
-                    loyerReference.classList.remove('hidden');
-                    
-                    // Pré-remplir le montant avec le loyer mensuel
-                    if (!montantInput.value) {
-                        montantInput.value = parseFloat(loyerMensuel).toFixed(2);
-                    }
-                } else {
-                    loyerReference.classList.add('hidden');
-                }
-            });
+        // Configurer la recherche
+        function setupSearch() {
+            searchInput.addEventListener('input', filterCharges);
         }
 
-        // Fonction pour formater la date
-        function formatDate(dateString) {
-            if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('fr-FR');
-        }
-
-        // Configurer la recherche et les filtres
-        function setupSearchAndFilters() {
-            searchInput.addEventListener('input', filterPaiements);
-            etatFilter.addEventListener('change', filterPaiements);
-        }
-
-        // Filtrer les paiements
-        function filterPaiements() {
+        // Filtrer les charges
+        function filterCharges() {
             const searchTerm = searchInput.value.toLowerCase();
-            const etatFilterValue = etatFilter.value;
             
-            const rows = document.querySelectorAll('.paiement-row');
+            const rows = document.querySelectorAll('.charge-row');
             let visibleCount = 0;
             
             rows.forEach(row => {
-                const etat = row.getAttribute('data-etat');
                 const rowText = row.textContent.toLowerCase();
                 const matchesSearch = rowText.includes(searchTerm);
-                const matchesEtat = !etatFilterValue || etat === etatFilterValue;
                 
-                if (matchesSearch && matchesEtat) {
+                if (matchesSearch) {
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -990,22 +720,25 @@ $date_automatique = date('Y-m-d');
             // Afficher/masquer le message "Aucun résultat"
             if (visibleCount === 0) {
                 noResults.classList.remove('hidden');
-                paiementTableBody.style.display = 'none';
+                chargeTableBody.style.display = 'none';
             } else {
                 noResults.classList.add('hidden');
-                paiementTableBody.style.display = '';
+                chargeTableBody.style.display = '';
             }
         }
 
-        // Validation en temps réel du montant
-        function validerMontantEnTempsReel() {
-            const montant = parseFloat(montantInput.value);
+        // Validation en temps réel de la désignation
+        function validerDesignationEnTempsReel() {
+            const designation = designationInput.value;
             const saveBtn = document.getElementById('saveBtn');
             
-            cacherMessageChamp('montant');
+            cacherMessageChamp('designation');
             
-            if (montant && montant <= 0) {
-                afficherMessageChamp('montant', 'Le montant doit être supérieur à 0');
+            if (designation && designation.length < 2) {
+                afficherMessageChamp('designation', 'La désignation doit contenir au moins 2 caractères');
+                saveBtn.disabled = true;
+            } else if (designation.length > 50) {
+                afficherMessageChamp('designation', 'La désignation ne peut pas dépasser 50 caractères');
                 saveBtn.disabled = true;
             } else {
                 saveBtn.disabled = false;
@@ -1043,35 +776,29 @@ $date_automatique = date('Y-m-d');
 
         // Afficher le modal d'ajout
         function showModal() {
-            modalTitle.textContent = 'Nouveau paiement';
+            modalTitle.textContent = 'Nouvelle charge';
             actionInput.value = 'ajouter';
-            paiementForm.reset();
-            paiementIdInput.value = '';
-            currentPaiementId = null;
+            chargeForm.reset();
+            chargeIdInput.value = '';
+            currentChargeId = null;
             
             // Réinitialiser les messages d'erreur
-            cacherMessageChamp('contrat_id');
-            cacherMessageChamp('affectation');
-            cacherMessageChamp('montant');
-            
-            // Réinitialiser les dates du contrat
-            contratDateDebut.textContent = '-';
-            contratDateFin.textContent = '-';
+            cacherMessageChamp('designation');
             
             // Réactiver le bouton
             document.getElementById('saveBtn').disabled = false;
             
-            paiementModal.classList.remove('hidden');
+            chargeModal.classList.remove('hidden');
         }
 
         // Masquer le modal d'ajout
         function hideModal() {
-            paiementModal.classList.add('hidden');
+            chargeModal.classList.add('hidden');
         }
 
         // Afficher le modal de confirmation de suppression
-        function showDeleteModal(paiementId) {
-            deletePaiementIdInput.value = paiementId;
+        function showDeleteModal(chargeId) {
+            deleteChargeIdInput.value = chargeId;
             deleteModal.classList.remove('hidden');
         }
 
@@ -1081,8 +808,8 @@ $date_automatique = date('Y-m-d');
         }
 
         // Afficher le modal de confirmation de réactivation
-        function showReactivateModal(paiementId) {
-            reactivatePaiementIdInput.value = paiementId;
+        function showReactivateModal(chargeId) {
+            reactivateChargeIdInput.value = chargeId;
             reactivateModal.classList.remove('hidden');
         }
 
@@ -1091,64 +818,31 @@ $date_automatique = date('Y-m-d');
             reactivateModal.classList.add('hidden');
         }
 
-        // Éditer un paiement
-        function editPaiement(paiementId, datePaiement, contratId, affectation, montant, etat, notes) {
-            const paiement = {
-                id: paiementId,
-                datePaiement: datePaiement,
-                contratId: contratId,
-                affectation: affectation,
-                montant: montant,
-                etat: etat,
-                notes: notes
+        // Éditer une charge
+        function editCharge(chargeId, designation) {
+            const charge = {
+                id: chargeId,
+                designation: designation
             };
-            showEditModal(paiement);
+            showEditModal(charge);
         }
 
         // Afficher le modal d'édition
-        function showEditModal(paiement) {
-            modalTitle.textContent = 'Modifier le paiement';
+        function showEditModal(charge) {
+            modalTitle.textContent = 'Modifier la charge';
             actionInput.value = 'modifier';
-            paiementIdInput.value = paiement.id;
-            document.getElementById('date_paiement').value = paiement.datePaiement;
-            document.getElementById('contrat_id').value = paiement.contratId;
-            document.getElementById('affectation').value = paiement.affectation;
-            document.getElementById('montant').value = paiement.montant;
-            document.getElementById('etat').value = paiement.etat;
-            document.getElementById('notes').value = paiement.notes;
-            
-            // Mettre à jour la référence du loyer et les dates
-            const selectedOption = contratSelect.options[contratSelect.selectedIndex];
-            if (selectedOption) {
-                const loyerMensuel = selectedOption.getAttribute('data-loyer');
-                const dateDebut = selectedOption.getAttribute('data-date-debut');
-                const dateFin = selectedOption.getAttribute('data-date-fin');
-                
-                if (loyerMensuel) {
-                    loyerMensuelValue.textContent = parseFloat(loyerMensuel).toFixed(2);
-                    loyerReference.classList.remove('hidden');
-                }
-                
-                if (dateDebut) {
-                    contratDateDebut.textContent = formatDate(dateDebut);
-                }
-                
-                if (dateFin) {
-                    contratDateFin.textContent = formatDate(dateFin);
-                }
-            }
+            chargeIdInput.value = charge.id;
+            document.getElementById('designation').value = charge.designation;
             
             // Réinitialiser les messages d'erreur
-            cacherMessageChamp('contrat_id');
-            cacherMessageChamp('affectation');
-            cacherMessageChamp('montant');
+            cacherMessageChamp('designation');
             
             // Réactiver le bouton
             document.getElementById('saveBtn').disabled = false;
             
-            currentPaiementId = paiement.id;
+            currentChargeId = charge.id;
             
-            paiementModal.classList.remove('hidden');
+            chargeModal.classList.remove('hidden');
         }
 
         // Navigation au clavier

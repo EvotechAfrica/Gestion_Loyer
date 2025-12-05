@@ -72,7 +72,7 @@ require_once('../models/select/select-membre.php');
                 <button id="sidebarToggle" class="mr-4 text-white hover:text-gray-200 transition-colors duration-200">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="text-xl font-bold">GestionLoyer</h1>
+                <h1 class="text-xl font-bold">La veranda</h1>
             </div>
 
             <!-- Barre de recherche -->

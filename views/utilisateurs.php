@@ -64,6 +64,59 @@ require_once('../models/select/select-users.php');
             object-fit: cover;
             border-radius: 8px;
         }
+        
+        /* Styles pour les barres de défilement */
+        .scrollable-menu {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Pour WebKit (Chrome, Safari) */
+        .scrollable-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Pour Firefox */
+        .scrollable-menu {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Style spécifique pour la sidebar */
+        .sidebar-content {
+            height: calc(100vh - 6rem);
+            overflow-y: auto;
+            padding-bottom: 6rem; /* Espace pour le pied de page */
+        }
+        
+        /* Style pour le menu utilisateur */
+        .user-menu-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        /* Style pour le menu latéral sur petits écrans */
+        @media (max-height: 700px) {
+            .sidebar-content {
+                height: calc(100vh - 4rem);
+                padding-bottom: 4rem;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -75,7 +128,7 @@ require_once('../models/select/select-users.php');
                 <button id="sidebarToggle" class="mr-4 text-white hover:text-gray-200 transition-colors duration-200">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="text-xl font-bold">GestionLoyer</h1>
+                <h1 class="text-xl font-bold">La veranda</h1>
             </div>
 
             <!-- Barre de recherche -->
@@ -92,7 +145,7 @@ require_once('../models/select/select-users.php');
                     <i class="fas fa-user-circle text-xl"></i>
                     <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
-                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20">
+                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20 user-menu-scroll scrollable-menu">
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-cog mr-2 text-purple-500"></i>Paramètres</a>
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200"><i class="fas fa-history mr-2 text-purple-500"></i>Journal d'activité</a>
                     <div class="border-t my-1"></div>
@@ -105,7 +158,7 @@ require_once('../models/select/select-users.php');
     <div class="flex pt-16">
         <!-- Barre latérale -->
         <div id="sidebar" class="sidebar text-white w-64 min-h-screen fixed shadow-xl">
-            <div class="p-4">
+            <div class="sidebar-content p-4 scrollable-menu">
                 <!-- En-tête de la barre latérale -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Principal</h2>
@@ -184,12 +237,12 @@ require_once('../models/select/select-users.php');
                         </li>
                     </ul>
                 </div>
+            </div>
 
-                <!-- Pied de page de la barre latérale -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
-                    <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
-                    <div class="font-semibold">Administrateur</div>
-                </div>
+            <!-- Pied de page de la barre latérale -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
+                <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
+                <div class="font-semibold">Administrateur</div>
             </div>
         </div>
 
@@ -551,13 +604,13 @@ require_once('../models/select/select-users.php');
             Toastify({
                 text: "<?= htmlspecialchars($_SESSION['message']['text']) ?>",
                 duration: 3000,
-                gravity: "top", // `top` ou `bottom`
-                position: "right", // `left`, `center` ou `right`
-                stopOnFocus: true, // Arrête la minuterie si l'utilisateur interagit avec la fenêtre
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
                 style: {
                     background: "linear-gradient(to right, <?= ($_SESSION['message']['type'] == 'success') ? '#22c55e, #16a34a' : '#ef4444, #dc2626' ?>)",
                 },
-                onClick: function() {} // Callback après le clic
+                onClick: function() {}
             }).showToast();
 
             // Supprimer le message de la session après l'affichage
