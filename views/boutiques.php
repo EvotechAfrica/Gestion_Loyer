@@ -74,72 +74,57 @@ require_once('../models/select/select-boutique.php');
             background: rgba(0, 0, 0, 0.5);
         }
         
-        /* Barres de défilement personnalisées */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-        
-        /* Styles pour les menus avec défilement */
+        /* Styles pour les barres de défilement */
         .scrollable-menu {
-            max-height: 300px;
             overflow-y: auto;
-            overflow-x: hidden;
-        }
-        
-        .scrollable-sidebar {
-            max-height: calc(100vh - 180px);
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 4px;
-        }
-        
-        .sidebar-section {
-            max-height: 200px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            margin-bottom: 1rem;
-        }
-        
-        .user-menu-scroll {
-            max-height: 250px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        
-        /* Scrollbar pour Firefox */
-        * {
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
         }
         
-        /* Tableau avec défilement */
-        .table-scroll {
-            max-height: 500px;
-            overflow-y: auto;
-            overflow-x: hidden;
+        /* Pour WebKit (Chrome, Safari) */
+        .scrollable-menu::-webkit-scrollbar {
+            width: 6px;
         }
         
-        /* Modal scroll */
-        .modal-scroll {
-            max-height: 70vh;
+        .scrollable-menu::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .scrollable-menu::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Pour Firefox */
+        .scrollable-menu {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Style spécifique pour la sidebar */
+        .sidebar-content {
+            height: calc(100vh - 6rem);
             overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 10px;
+            padding-bottom: 6rem; /* Espace pour le pied de page */
+        }
+        
+        /* Style pour le menu utilisateur */
+        .user-menu-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        /* Style pour le menu latéral sur petits écrans */
+        @media (max-height: 700px) {
+            .sidebar-content {
+                height: calc(100vh - 4rem);
+                padding-bottom: 4rem;
+            }
         }
     </style>
 </head>
@@ -170,7 +155,7 @@ require_once('../models/select/select-boutique.php');
                     <i class="fas fa-user-circle text-xl"></i>
                     <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
-                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20 user-menu-scroll">
+                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 text-gray-700 z-20 user-menu-scroll scrollable-menu">
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
                         <i class="fas fa-user mr-2 text-purple-500"></i>Profil
                     </a>
@@ -178,13 +163,7 @@ require_once('../models/select/select-boutique.php');
                         <i class="fas fa-cog mr-2 text-purple-500"></i>Paramètres
                     </a>
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
-                        <i class="fas fa-bell mr-2 text-purple-500"></i>Notifications
-                    </a>
-                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
                         <i class="fas fa-history mr-2 text-purple-500"></i>Journal d'activité
-                    </a>
-                    <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
-                        <i class="fas fa-question-circle mr-2 text-purple-500"></i>Aide
                     </a>
                     <div class="border-t my-1"></div>
                     <a href="#" class="block px-4 py-2 hover:bg-purple-50 transition-colors duration-200">
@@ -198,11 +177,11 @@ require_once('../models/select/select-boutique.php');
     <div class="flex pt-16">
         <!-- Barre latérale -->
         <div id="sidebar" class="sidebar text-white w-64 min-h-screen fixed shadow-xl">
-            <div class="p-4">
+            <div class="sidebar-content p-4 scrollable-menu">
                 <!-- En-tête de la barre latérale -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Principal</h2>
-                    <ul class="mt-2 sidebar-section">
+                    <ul class="mt-2">
                         <li>
                             <a href="dashboard.php" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
                                 <i class="fas fa-tachometer-alt mr-3"></i>
@@ -215,7 +194,7 @@ require_once('../models/select/select-boutique.php');
                 <!-- Section Interface -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Gestion</h2>
-                    <ul class="mt-2 sidebar-section">
+                    <ul class="mt-2">
                         <li class="mb-1">
                             <a href="boutiques.php" class="flex items-center justify-between py-2 px-4 glass-effect rounded-lg hover-lift">
                                 <div class="flex items-center">
@@ -240,7 +219,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-users mr-3"></i>
                                     Locataires
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">8</span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($membres_count) ? $membres_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -249,7 +228,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-link mr-3"></i>
                                     Affectations
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">12</span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($affectations_count) ? $affectations_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -258,7 +237,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-file-contract mr-3"></i>
                                     Contrats
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">12</span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($contrats_count) ? $contrats_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -267,7 +246,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-file-invoice-dollar mr-3"></i>
                                     Paiements Loyer
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">42</span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($paiements_count) ? $paiements_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -276,16 +255,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-money-bill-wave mr-3"></i>
                                     Charges
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">5</span>
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="alignements.php" class="flex items-center justify-between py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <div class="flex items-center">
-                                    <i class="fas fa-euro-sign mr-3"></i>
-                                    Alignements
-                                </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">15</span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($charges_count) ? $charges_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -294,7 +264,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-credit-card mr-3"></i>
                                     Paiements Charges
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo count($paiements ?? []); ?></span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($paiements_charges_count) ? $paiements_charges_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -303,7 +273,7 @@ require_once('../models/select/select-boutique.php');
                                     <i class="fas fa-user-cog mr-3"></i>
                                     Utilisateurs
                                 </div>
-                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">3</span>
+                                <span class="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full"><?php echo isset($utilisateurs_count) ? $utilisateurs_count : '0'; ?></span>
                             </a>
                         </li>
                         <li class="mb-1">
@@ -320,7 +290,7 @@ require_once('../models/select/select-boutique.php');
                 <!-- Section Addons -->
                 <div class="mb-8">
                     <h2 class="text-lg font-semibold text-white text-opacity-80 uppercase tracking-wider">Outils</h2>
-                    <ul class="mt-2 sidebar-section">
+                    <ul class="mt-2">
                         <li class="mb-1">
                             <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
                                 <i class="fas fa-chart-pie mr-3"></i>
@@ -333,33 +303,15 @@ require_once('../models/select/select-boutique.php');
                                 Documents
                             </a>
                         </li>
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <i class="fas fa-calendar-alt mr-3"></i>
-                                Calendrier
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <i class="fas fa-envelope mr-3"></i>
-                                Messages
-                            </a>
-                        </li>
-                        <li class="mb-1">
-                            <a href="#" class="flex items-center py-2 px-4 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors duration-200 hover-lift">
-                                <i class="fas fa-tasks mr-3"></i>
-                                Tâches
-                            </a>
-                        </li>
                     </ul>
                 </div>
+            </div>
 
-                <!-- Pied de page de la barre latérale -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
-                    <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
-                    <div class="font-semibold">Administrateur</div>
-                    <div class="text-xs text-white text-opacity-60 mt-1">Dernière connexion : Aujourd'hui</div>
-                </div>
+            <!-- Pied de page de la barre latérale -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 glass-effect rounded-t-lg">
+                <div class="text-sm text-white text-opacity-70">Connecté en tant que :</div>
+                <div class="font-semibold">Administrateur</div>
+                <div class="text-xs text-white text-opacity-60 mt-1">Dernière connexion : Aujourd'hui</div>
             </div>
         </div>
 
@@ -489,9 +441,9 @@ require_once('../models/select/select-boutique.php');
 
             <!-- Tableau des boutiques -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift">
-                <div class="table-scroll">
+                <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10">
+                        <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Numéro</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Surface</th>
@@ -592,82 +544,80 @@ require_once('../models/select/select-boutique.php');
             <!-- Modal pour ajouter/modifier une boutique -->
             <div id="boutiqueModal" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full hidden z-50">
                 <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-2xl rounded-2xl bg-white">
-                    <div class="modal-scroll">
-                        <div class="mt-3">
-                            <!-- En-tête du modal -->
-                            <div class="flex justify-between items-center pb-3 border-b">
-                                <h3 id="modalTitle" class="text-lg font-medium text-gray-900">Ajouter une boutique</h3>
-                                <button id="closeModal" class="text-gray-400 hover:text-gray-500 transition-colors duration-200">
-                                    <i class="fas fa-times text-xl"></i>
-                                </button>
+                    <div class="mt-3">
+                        <!-- En-tête du modal -->
+                        <div class="flex justify-between items-center pb-3 border-b">
+                            <h3 id="modalTitle" class="text-lg font-medium text-gray-900">Ajouter une boutique</h3>
+                            <button id="closeModal" class="text-gray-400 hover:text-gray-500 transition-colors duration-200">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+
+                        <!-- Formulaire -->
+                        <form id="boutiqueForm" action="../models/traitement/boutique-post.php" method="POST">
+                            <input type="hidden" id="action" name="action" value="ajouter">
+                            <input type="hidden" id="boutiqueId" name="id" value="">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="surface" class="block text-sm font-medium text-gray-700">Surface (m²) *</label>
+                                        <input type="number" id="surface" name="surface" step="0.01" min="0" required
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
+                                            placeholder="Ex: 25.50">
+                                    </div>
+
+                                    <div>
+                                        <label for="etat" class="block text-sm font-medium text-gray-700">État *</label>
+                                        <select id="etat" name="etat" required
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
+                                            <option value="">Sélectionner un état</option>
+                                            <option value="libre">Libre</option>
+                                            <option value="occupée">Occupée</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="categorie" class="block text-sm font-medium text-gray-700">Catégorie *</label>
+                                        <select id="categorie" name="categorie" required
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
+                                            <option value="">Sélectionner une catégorie</option>
+                                            <?php foreach ($categories as $categorie): ?>
+                                                <option value="<?php echo $categorie['id']; ?>">
+                                                    <?php echo htmlspecialchars($categorie['designation']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="statut" name="statut" value="1" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                                        <label for="statut" class="ml-2 block text-sm text-gray-700">Boutique inactive</label>
+                                    </div>
+
+                                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-info-circle text-purple-500 mr-2"></i>
+                                            <span class="text-sm text-purple-700">
+                                                Le numéro sera généré automatiquement (ex: B001, Q001) selon la catégorie sélectionnée.
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Formulaire -->
-                            <form id="boutiqueForm" action="../models/traitement/boutique-post.php" method="POST">
-                                <input type="hidden" id="action" name="action" value="ajouter">
-                                <input type="hidden" id="boutiqueId" name="id" value="">
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label for="surface" class="block text-sm font-medium text-gray-700">Surface (m²) *</label>
-                                            <input type="number" id="surface" name="surface" step="0.01" min="0" required
-                                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200"
-                                                placeholder="Ex: 25.50">
-                                        </div>
-
-                                        <div>
-                                            <label for="etat" class="block text-sm font-medium text-gray-700">État *</label>
-                                            <select id="etat" name="etat" required
-                                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
-                                                <option value="">Sélectionner un état</option>
-                                                <option value="libre">Libre</option>
-                                                <option value="occupée">Occupée</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label for="categorie" class="block text-sm font-medium text-gray-700">Catégorie *</label>
-                                            <select id="categorie" name="categorie" required
-                                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200">
-                                                <option value="">Sélectionner une catégorie</option>
-                                                <?php foreach ($categories as $categorie): ?>
-                                                    <option value="<?php echo $categorie['id']; ?>">
-                                                        <?php echo htmlspecialchars($categorie['designation']); ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="flex items-center">
-                                            <input type="checkbox" id="statut" name="statut" value="1" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
-                                            <label for="statut" class="ml-2 block text-sm text-gray-700">Boutique inactive</label>
-                                        </div>
-
-                                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-info-circle text-purple-500 mr-2"></i>
-                                                <span class="text-sm text-purple-700">
-                                                    Le numéro sera généré automatiquement (ex: B001, Q001) selon la catégorie sélectionnée.
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Actions du modal -->
-                                <div class="flex justify-end space-x-3 pt-4 border-t mt-6">
-                                    <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
-                                        Annuler
-                                    </button>
-                                    <button type="submit" id="saveBtn" class="btn-gradient text-white px-4 py-2 rounded-lg shadow hover-lift transition-all duration-300">
-                                        Enregistrer
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                            <!-- Actions du modal -->
+                            <div class="flex justify-end space-x-3 pt-4 border-t mt-6">
+                                <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                                    Annuler
+                                </button>
+                                <button type="submit" id="saveBtn" class="btn-gradient text-white px-4 py-2 rounded-lg shadow hover-lift transition-all duration-300">
+                                    Enregistrer
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -718,7 +668,7 @@ require_once('../models/select/select-boutique.php');
                             <button id="cancelReactivate" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-200">
                                 Annuler
                             </button>
-                            <form id="reactivateForm" action="../../models/traitement/boutique-post.php" method="POST" class="inline">
+                            <form id="reactivateForm" action="../models/traitement/boutique-post.php" method="POST" class="inline">
                                 <input type="hidden" name="action" value="reactiver">
                                 <input type="hidden" name="id" id="reactivateBoutiqueId" value="">
                                 <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 shadow hover-lift">
@@ -741,16 +691,15 @@ require_once('../models/select/select-boutique.php');
             Toastify({
                 text: "<?= htmlspecialchars($_SESSION['message']['text']) ?>",
                 duration: 3000,
-                gravity: "top", // `top` ou `bottom`
-                position: "right", // `left`, `center` ou `right`
-                stopOnFocus: true, // Arrête la minuterie si l'utilisateur interagit avec la fenêtre
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
                 style: {
                     background: "linear-gradient(to right, <?= ($_SESSION['message']['type'] == 'success') ? '#22c55e, #16a34a' : '#ef4444, #dc2626' ?>)",
                 },
-                onClick: function() {} // Callback après le clic
+                onClick: function() {}
             }).showToast();
 
-            // Supprimer le message de la session après l'affichage
             <?php unset($_SESSION['message']); ?>
         <?php endif; ?>
 
@@ -1002,39 +951,33 @@ require_once('../models/select/select-boutique.php');
             }
 
             boutiqueModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         }
 
         // Masquer le modal d'ajout/modification
         function hideModal() {
             boutiqueModal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
         }
 
         // Afficher le modal de confirmation de suppression
         function showDeleteModal(boutiqueId) {
             deleteBoutiqueIdInput.value = boutiqueId;
             deleteModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         }
 
         // Masquer le modal de confirmation de suppression
         function hideDeleteModal() {
             deleteModal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
         }
 
         // Afficher le modal de confirmation de réactivation
         function showReactivateModal(boutiqueId) {
             reactivateBoutiqueIdInput.value = boutiqueId;
             reactivateModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         }
 
         // Masquer le modal de confirmation de réactivation
         function hideReactivateModal() {
             reactivateModal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
         }
 
         // Éditer une boutique
